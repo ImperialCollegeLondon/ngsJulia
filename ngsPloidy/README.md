@@ -13,7 +13,8 @@ With the following notation:
 * D: observed sequencing data
 * O: ploidy
 * A: ancestral state
-`ngsPloidy` calculates the following log-likelihood for the whole sample:
+
+`ngsPloidy` calculates the following log-likelihood:
 ```
 log(P(D, G, A|O_1=y_1, O_2=y_2, ..., O_n=y_n)) = sum_{samples} sum_{sites} P(D|G,A) P(G|O,A) P(A)
 ```
@@ -21,9 +22,10 @@ where:
 * P(D|G,A): genotype likelihood
 * P(G|O,A): genotype probability (derived from the expected population allele frequency from the site frequency spectrum)
 * P(A): probability of correct assignment of ancestral state
-The model assumes that we observed at most two alleles. It can also calculate the per-sample log-likelihood by omitting ```sum_{samples}```.
 
-`ngsPloidy` will output the most likely array of marginal ploidies, as well as the likelihood of all samples having the same ploidy.
+The model assumes that we observed at most two alleles. 
+It can also calculate the per-sample log-likelihood by omitting ```sum_{samples}```.
+`ngsPloidy` will output the most likely array of marginal ploidies, as well as the likelihood of all samples having the same ploidy as a test against aneuploidy.
 
 ## Tutorial
 
@@ -35,7 +37,7 @@ JULIA=~/Software/julia-1.6.1/bin/julia
 NGSJULIA=~/Software/ngsJulia
 ```
 
-First, we need a create a file containing probabilities of genotypes and of the major allele being ancestral. These probability files can be generated using the following R script:
+Unless we wish to use uniform probabilities (as we will see later), first we need a create a file containing probabilities of genotypes and of the major allele being ancestral. These probability files can be generated using the following R script:
 ```
 Rscript $NGSJULIA/ngsPloidy/writePars.R --help
 ```
@@ -79,7 +81,7 @@ Rscript $NGSJULIA/simulMpileup.R --help
 
 ### Case studies
 
-Let's investigate several case studies to appreciate how `ngsPloidy` works.
+Let's investigate several case studies to understand how `ngsPloidy` works.
 We can run
 ```
 $JULIA $NGSJULIA/ngsPloidy/ngsPloidy.jl --help
@@ -103,11 +105,11 @@ If we assume that we know the ancestral state and it's equivalent to the referen
 ```
 $JULIA $NGSJULIA/ngsPloidy/ngsPloidy.jl --fin test.A.mpileup.gz --fpars test.pars --nSamples 10 --keepRef 1
 ```
-The option `--keepRef` forces the reference allele to be one of the two considered alleles and it is mandatory with `--fpars``.
+The option `--keepRef` forces the reference allele to be one of the two considered alleles and it is mandatory with `--fpars`.
 
 Results are printed on the screen, and show:
 * nr of analysed sites: vector of sites that passed filtering for each sample
-* log-likelihoods of per-sample ploidies: a matrix of nr_sample X nr_ploidies with the log-likelihood of each sample having a certain ploidy (rows are separated by ;)
+* log-likelihoods of per-sample ploidies: a matrix of (nr_sample x nr_ploidies) with the log-likelihood of each sample having a certain ploidy (rows are separated by ;)
 * #MLE vector of ploidies: the vector if individual maximum likelihood estimates of ploidy for each sample
 * #log-likelikehood of MLE vector of ploidies: the log-likelihood of the above vector of estimated ploidies
 * #LRT of aneuploidy: difference between MLE  vector of ploidies and the log-likliehood of all samples having the same ploidy, calculated for all tested ploidies
@@ -143,7 +145,7 @@ less -S test.A.glikes.gz
 
 --------------------------
 
-We can also change the genotype probabilities in input. For instance, we can impose an automatic setting of the probability of major allele being the ancestral state
+We can also change the genotype probabilities in input. For instance, we can impose an automatic setting of the probability of major allele being the ancestral state.
 ```
 $JULIA $NGSJULIA/ngsPloidy/ngsPloidy.jl --fin test.A.mpileup.gz --fpars test.auto.pars --fout test.A.out.gz --nSamples 10 --keepRef 1
 
@@ -152,7 +154,7 @@ less -S test.A.out.gz
 
 ---------------------------
 
-One additional possibility is also to do not impose any genotype probability based on the site frequency spectrum $P(G|O,A)$ (with `--fpars`) and use a uniform probability distribution instead (`--unif 1`).
+One additional possibility is also to do not impose any genotype probability based on the site frequency spectrum P(G|O,A) (with `--fpars`) and use a uniform probability distribution instead (`--unif 1`).
 With this option you are required that all sites where all the samples have data are processed (i.e. `--minSamples` should be equal to `--nSamples`), otherwise the program will throw an error.
 
 ```

@@ -78,7 +78,7 @@ function parse_commandline_pool()
 		"--verbose"
 			help = "verbosity level"
 			arg_type = Int64
-			default = 1
+			default = 0
 
 		"--printSites"
 			help =  "print on stdout every --printSites sites"
